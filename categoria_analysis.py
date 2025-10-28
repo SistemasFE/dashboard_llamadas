@@ -478,7 +478,7 @@ class ExcelCategoryAnalyzer:
                     # Encuentra la excepción y la extrae
                     idx = temp.lower().find(exc.lower())
                     result.append(temp[idx:idx+len(exc)])
-                    # Elimina la excepción del string
+                    # Elimina la excepción dequierl string
                     temp = temp[:idx] + temp[idx+len(exc):]
             # Ahora separa el resto por comas
             # Si queda algo, sepáralo por comas
@@ -507,10 +507,6 @@ class ExcelCategoryAnalyzer:
                         subtipo_raw = str(row[subtipo_col]).strip()
                         break
 
-            tiene_coma_gen = ',' in categoria_gen_raw and categoria_gen_raw not in excepciones_coma
-            tiene_coma_esp = ',' in categoria_especifica_raw and categoria_especifica_raw not in excepciones_coma
-            tiene_coma_sub = ',' in subtipo_raw and subtipo_raw not in excepciones_coma
-
             installer_value = "Sin asignar"
             if installer_column and installer_column in df.columns:
                 raw_installer = row.get(installer_column)
@@ -519,45 +515,44 @@ class ExcelCategoryAnalyzer:
                 else:
                     installer_value = str(raw_installer).strip()
 
-            if tiene_coma_gen and tiene_coma_esp and tiene_coma_sub:
-                categoria_gen_list = split_with_exceptions(categoria_gen_raw, excepciones_coma)
-                categoria_especifica_list = split_with_exceptions(categoria_especifica_raw, excepciones_coma)
-                subtipo_list = split_with_exceptions(subtipo_raw, excepciones_coma)
-                max_len = max(len(categoria_gen_list), len(categoria_especifica_list), len(subtipo_list))
-                def pad_list(lst, n):
-                    return lst + [''] * (n - len(lst))
-                categoria_gen_list = pad_list(categoria_gen_list, max_len)
-                categoria_especifica_list = pad_list(categoria_especifica_list, max_len)
-                subtipo_list = pad_list(subtipo_list, max_len)
-                for gen, esp, sub in zip(categoria_gen_list, categoria_especifica_list, subtipo_list):
-                    combined_parts = [gen]
-                    if esp:
-                        combined_parts.append(esp)
-                    if sub:
-                        combined_parts.append(sub)
-                    if len(combined_parts) > 1:
-                        combined_category = " | ".join(combined_parts)
-                        combined_counts[combined_category] += 1
-                        combined_details.append({
-                            'categoria_general': gen,
-                            'categoria_especifica': esp,
-                            'subtipo': sub,
-                            'ruta_completa': combined_category,
-                            'agente_instalador': installer_value
-                        })
-            else:
-                combined_parts = [categoria_gen_raw]
-                if categoria_especifica_raw:
-                    combined_parts.append(categoria_especifica_raw)
-                if subtipo_raw:
-                    combined_parts.append(subtipo_raw)
+            # Separar cada campo por comas (usando excepciones)
+            categoria_gen_list = split_with_exceptions(categoria_gen_raw, excepciones_coma)
+            categoria_especifica_list = split_with_exceptions(categoria_especifica_raw, excepciones_coma)
+            subtipo_list = split_with_exceptions(subtipo_raw, excepciones_coma)
+
+            # Si alguna lista está vacía, poner un string vacío
+            if not categoria_gen_list:
+                categoria_gen_list = ['']
+            if not categoria_especifica_list:
+                categoria_especifica_list = ['']
+            if not subtipo_list:
+                subtipo_list = ['']
+
+            # Calcular la longitud máxima
+            max_len = max(len(categoria_gen_list), len(categoria_especifica_list), len(subtipo_list))
+
+            # Si alguna lista es más corta, repetir el último valor para igualar la longitud
+            def extend_list(lst, n):
+                if len(lst) < n:
+                    return lst + [lst[-1]] * (n - len(lst))
+                return lst
+            categoria_gen_list = extend_list(categoria_gen_list, max_len)
+            categoria_especifica_list = extend_list(categoria_especifica_list, max_len)
+            subtipo_list = extend_list(subtipo_list, max_len)
+
+            for gen, esp, sub in zip(categoria_gen_list, categoria_especifica_list, subtipo_list):
+                combined_parts = [gen]
+                if esp:
+                    combined_parts.append(esp)
+                if sub:
+                    combined_parts.append(sub)
                 if len(combined_parts) > 1:
                     combined_category = " | ".join(combined_parts)
                     combined_counts[combined_category] += 1
                     combined_details.append({
-                        'categoria_general': categoria_gen_raw,
-                        'categoria_especifica': categoria_especifica_raw,
-                        'subtipo': subtipo_raw,
+                        'categoria_general': gen,
+                        'categoria_especifica': esp,
+                        'subtipo': sub,
                         'ruta_completa': combined_category,
                         'agente_instalador': installer_value
                     })

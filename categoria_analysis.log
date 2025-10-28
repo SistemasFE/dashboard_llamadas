@@ -1,0 +1,18 @@
+2025-10-28 14:23:51,459 - INFO - Directorio de resultados: results
+2025-10-28 14:23:51,472 - INFO - Procesando archivo: tmpddu9i6kj.xlsx
+2025-10-28 14:23:52,932 - INFO - Archivo tmpddu9i6kj.xlsx: 289 filas, 27 columnas
+2025-10-28 14:23:52,934 - INFO - Columna de categoría identificada: 'categoria_general' (coincide con 'categoria_general')
+2025-10-28 14:23:52,945 - INFO - Archivo tmpddu9i6kj.xlsx: 8 categorías únicas encontradas (289 filas procesadas)
+2025-10-28 14:23:52,947 - INFO - Columna 'categoria_general': 8 valores únicos (289 filas procesadas)
+2025-10-28 14:23:52,951 - INFO - Columna 'categoria_especifica': 50 valores únicos (288 filas procesadas)
+2025-10-28 14:23:52,953 - INFO - Columna 'categoria_especifica_1': 25 valores únicos (288 filas procesadas)
+2025-10-28 14:23:52,954 - INFO - Columna 'categoria_especifica_2': 17 valores únicos (45 filas procesadas)
+2025-10-28 14:23:52,959 - INFO - Columna 'subtipo_categoria': 99 valores únicos (288 filas procesadas)
+2025-10-28 14:23:52,962 - INFO - Columna 'subtipo_categoria_1': 62 valores únicos (288 filas procesadas)
+2025-10-28 14:23:52,964 - INFO - Columna 'subtipo_categoria_2': 23 valores únicos (45 filas procesadas)
+2025-10-28 14:23:52,967 - INFO - Columna 'motivo_de_la_llamada_short': 281 valores únicos (288 filas procesadas)
+2025-10-28 14:23:52,969 - INFO - Columna 'motivo_no_resolucion': 82 valores únicos (212 filas procesadas)
+2025-10-28 14:23:52,971 - INFO - Columna de agente instalador identificada: 'agente_instalador' (coincide con 'agente_instalador')
+2025-10-28 14:23:53,006 - INFO - Columna de agente instalador identificada: 'agente_instalador' (coincide con 'agente_instalador')
+2025-10-28 14:23:53,127 - INFO - Añadida hoja 'Agentes_Instaladores' con 304 registros
+2025-10-28 14:23:53,197 - INFO - Reporte ejecutivo Excel generado en memoria: 25338 bytes
