@@ -19,6 +19,9 @@ import tempfile
 import os
 from pathlib import Path
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Agregar el directorio scripts al path para importar módulos
 sys.path.append(str(Path(__file__).parent.parent))
