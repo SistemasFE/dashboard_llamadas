@@ -464,12 +464,52 @@ class ExcelCategoryAnalyzer:
         if not categoria_general:
             return combined_counts, combined_details
 
+        # Lista de excepciones: nombres que contienen comas internas y no deben separarse
+        excepciones_coma = [
+            "Importes, fechas y métodos de pago"
+        ]
+
+        def split_with_exceptions(raw_value, excepciones):
+            # Busca excepciones completas y las extrae, luego separa el resto por comas
+            result = []
+            temp = raw_value
+            for exc in excepciones:
+                if exc.lower() in temp.lower():
+                    # Encuentra la excepción y la extrae
+                    idx = temp.lower().find(exc.lower())
+                    result.append(temp[idx:idx+len(exc)])
+                    # Elimina la excepción del string
+                    temp = temp[:idx] + temp[idx+len(exc):]
+            # Ahora separa el resto por comas
+            # Si queda algo, sepáralo por comas
+            for part in temp.split(','):
+                part = part.strip()
+                if part:
+                    result.append(part)
+            # Elimina duplicados y vacíos
+            return [r for r in result if r]
+
         for idx, row in df.iterrows():
             if pd.isna(row[categoria_general]):
                 continue
 
-            # NO expandir - tomar el valor tal cual
-            categoria_gen = str(row[categoria_general]).strip()
+            categoria_gen_raw = str(row[categoria_general]).strip()
+            categoria_especifica_raw = ''
+            subtipo_raw = ''
+            if categoria_especifica_cols:
+                for cat_col in categoria_especifica_cols:
+                    if not pd.isna(row[cat_col]):
+                        categoria_especifica_raw = str(row[cat_col]).strip()
+                        break
+            if subtipo_cols:
+                for subtipo_col in subtipo_cols:
+                    if not pd.isna(row[subtipo_col]):
+                        subtipo_raw = str(row[subtipo_col]).strip()
+                        break
+
+            tiene_coma_gen = ',' in categoria_gen_raw and categoria_gen_raw not in excepciones_coma
+            tiene_coma_esp = ',' in categoria_especifica_raw and categoria_especifica_raw not in excepciones_coma
+            tiene_coma_sub = ',' in subtipo_raw and subtipo_raw not in excepciones_coma
 
             installer_value = "Sin asignar"
             if installer_column and installer_column in df.columns:
@@ -479,36 +519,48 @@ class ExcelCategoryAnalyzer:
                 else:
                     installer_value = str(raw_installer).strip()
 
-            # Construir ruta sin expandir valores
-            combined_parts = [categoria_gen]
-
-            # Agregar primera categoria_especifica si existe
-            if categoria_especifica_cols:
-                for cat_col in categoria_especifica_cols:
-                    if not pd.isna(row[cat_col]):
-                        cat_esp = str(row[cat_col]).strip()
-                        combined_parts.append(cat_esp)
-                        break  # Solo tomar la primera categoría específica
-
-            # Agregar primer subtipo si existe
-            if subtipo_cols:
-                for subtipo_col in subtipo_cols:
-                    if not pd.isna(row[subtipo_col]):
-                        subtipo = str(row[subtipo_col]).strip()
-                        combined_parts.append(subtipo)
-                        break  # Solo tomar el primer subtipo
-
-            # Crear ruta completa
-            if len(combined_parts) > 1:  # Si hay más que solo categoria_general
-                combined_category = " | ".join(combined_parts)
-                combined_counts[combined_category] += 1
-                combined_details.append({
-                    'categoria_general': combined_parts[0],
-                    'categoria_especifica': combined_parts[1] if len(combined_parts) > 1 else '',
-                    'subtipo': combined_parts[2] if len(combined_parts) > 2 else '',
-                    'ruta_completa': combined_category,
-                    'agente_instalador': installer_value
-                })
+            if tiene_coma_gen and tiene_coma_esp and tiene_coma_sub:
+                categoria_gen_list = split_with_exceptions(categoria_gen_raw, excepciones_coma)
+                categoria_especifica_list = split_with_exceptions(categoria_especifica_raw, excepciones_coma)
+                subtipo_list = split_with_exceptions(subtipo_raw, excepciones_coma)
+                max_len = max(len(categoria_gen_list), len(categoria_especifica_list), len(subtipo_list))
+                def pad_list(lst, n):
+                    return lst + [''] * (n - len(lst))
+                categoria_gen_list = pad_list(categoria_gen_list, max_len)
+                categoria_especifica_list = pad_list(categoria_especifica_list, max_len)
+                subtipo_list = pad_list(subtipo_list, max_len)
+                for gen, esp, sub in zip(categoria_gen_list, categoria_especifica_list, subtipo_list):
+                    combined_parts = [gen]
+                    if esp:
+                        combined_parts.append(esp)
+                    if sub:
+                        combined_parts.append(sub)
+                    if len(combined_parts) > 1:
+                        combined_category = " | ".join(combined_parts)
+                        combined_counts[combined_category] += 1
+                        combined_details.append({
+                            'categoria_general': gen,
+                            'categoria_especifica': esp,
+                            'subtipo': sub,
+                            'ruta_completa': combined_category,
+                            'agente_instalador': installer_value
+                        })
+            else:
+                combined_parts = [categoria_gen_raw]
+                if categoria_especifica_raw:
+                    combined_parts.append(categoria_especifica_raw)
+                if subtipo_raw:
+                    combined_parts.append(subtipo_raw)
+                if len(combined_parts) > 1:
+                    combined_category = " | ".join(combined_parts)
+                    combined_counts[combined_category] += 1
+                    combined_details.append({
+                        'categoria_general': categoria_gen_raw,
+                        'categoria_especifica': categoria_especifica_raw,
+                        'subtipo': subtipo_raw,
+                        'ruta_completa': combined_category,
+                        'agente_instalador': installer_value
+                    })
 
         return combined_counts, combined_details
 
